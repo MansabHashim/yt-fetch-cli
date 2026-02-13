@@ -97,8 +97,16 @@ if [[ $FULL_URL == *"list="* ]]; then
     CHANNEL_NAME=$(echo "$RAW_JSON" | jq -r '.channel // .uploader // "Unknown"')
     
     # Sanitize names for filename (replace special characters)
-    PLAYLIST_TITLE=$(echo "$PLAYLIST_TITLE" | tr -cd '[:alnum:] -' | tr ' ' '_')
-    CHANNEL_NAME=$(echo "$CHANNEL_NAME" | tr -cd '[:alnum:] -' | tr ' ' '_')
+    PLAYLIST_TITLE=$(echo "$PLAYLIST_TITLE" | tr -cd '[:alnum:] -' | tr ' ' '_' | sed 's/^[_-]*//;s/[_-]*$//')
+    CHANNEL_NAME=$(echo "$CHANNEL_NAME" | tr -cd '[:alnum:] -' | tr ' ' '_' | sed 's/^[_-]*//;s/[_-]*$//')
+    
+    # Fallback to defaults if sanitization results in empty strings
+    PLAYLIST_TITLE=${PLAYLIST_TITLE:-"Playlist"}
+    CHANNEL_NAME=${CHANNEL_NAME:-"Unknown"}
+    
+    # Truncate to prevent filesystem path length issues (max 100 chars each)
+    PLAYLIST_TITLE=${PLAYLIST_TITLE:0:100}
+    CHANNEL_NAME=${CHANNEL_NAME:0:100}
     
     FILE_PATH="${FOLDER_NAME}/${PLAYLIST_TITLE}_by_${CHANNEL_NAME}.txt"
 else
