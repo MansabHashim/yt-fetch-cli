@@ -96,14 +96,16 @@ sanitize_filename() {
     local default="$2"
     local result
     
-    # Remove special characters, replace spaces with underscores, trim leading/trailing -_
-    result=$(echo "$input" | tr -cd '[:alnum:] -' | tr ' ' '_' | sed 's/^[_-]*//;s/[_-]*$//')
+    # Remove special characters and replace spaces with underscores
+    result=$(echo "$input" | tr -cd '[:alnum:] -' | tr ' ' '_')
     
     # Fallback to default if empty
     result=${result:-"$default"}
     
-    # Truncate to 100 chars and trim edges again
+    # Truncate to 100 chars
     result=${result:0:100}
+    
+    # Trim leading/trailing underscores and hyphens
     while [[ "$result" =~ ^[_-] ]]; do result=${result:1}; done
     while [[ "$result" =~ [_-]$ ]]; do result=${result%?}; done
     
