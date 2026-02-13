@@ -13,7 +13,6 @@ NC='\033[0m'
 # 1. Input Handling
 read -p "Enter YouTube @username or URL: " USER_INPUT
 
-# Basic check if input is empty
 if [ -z "$USER_INPUT" ]; then
     echo -e "${RED}Error: No input provided.${NC}"
     exit 1
