@@ -90,8 +90,43 @@ OLDEST_URL=$(echo "$RAW_JSON" | jq -r '.entries[-1].url // .entries[-1].id')
 TOTAL_TIME=$(printf '%dh:%dm:%ds\n' $((TOTAL_SEC/3600)) $((TOTAL_SEC%3600/60)) $((TOTAL_SEC%60)))
 AVG_VIEWS=$((VIDEO_COUNT > 0 ? TOTAL_VIEWS / VIDEO_COUNT : 0))
 
-# Save List
-FILE_PATH="${FOLDER_NAME}/${HANDLE}-urls.txt"
+# Function to sanitize filename components
+sanitize_filename() {
+    local input="$1"
+    local default="$2"
+    local result
+    
+    # Remove special characters and replace spaces with underscores
+    result=$(echo "$input" | tr -cd '[:alnum:] -' | tr ' ' '_')
+    
+    # Fallback to default if empty
+    result=${result:-"$default"}
+    
+    # Truncate to 100 chars
+    result=${result:0:100}
+    
+    # Trim leading/trailing underscores and hyphens
+    while [[ "$result" =~ ^[_-] ]]; do result=${result:1}; done
+    while [[ "$result" =~ [_-]$ ]]; do result=${result%?}; done
+    
+    echo "$result"
+}
+
+# Determine if URL is a playlist and set appropriate filename
+if [[ "$FULL_URL" == *"list="* ]]; then
+    # Extract playlist title and channel name from JSON
+    PLAYLIST_TITLE=$(echo "$RAW_JSON" | jq -r '.title // "Playlist"')
+    CHANNEL_NAME=$(echo "$RAW_JSON" | jq -r '.channel // .uploader // "Unknown"')
+    
+    # Sanitize names for filename
+    PLAYLIST_TITLE=$(sanitize_filename "$PLAYLIST_TITLE" "Playlist")
+    CHANNEL_NAME=$(sanitize_filename "$CHANNEL_NAME" "Unknown")
+    
+    FILE_PATH="${FOLDER_NAME}/${PLAYLIST_TITLE}_by_${CHANNEL_NAME}.txt"
+else
+    # Use handle for channel videos (existing behavior)
+    FILE_PATH="${FOLDER_NAME}/${HANDLE}-urls.txt"
+fi
 echo "$RAW_JSON" | jq -r '.entries[] | "https://www.youtube.com/watch?v=" + (.id // .url)' > "$FILE_PATH"
 
 # 5. Dashboard (Always Displayed)
