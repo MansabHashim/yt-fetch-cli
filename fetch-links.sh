@@ -96,7 +96,7 @@ sanitize_filename() {
     local default="$2"
     local result
     
-    # Remove special characters, replace spaces with underscores, trim edges
+    # Remove special characters, replace spaces with underscores, trim leading/trailing -_
     result=$(echo "$input" | tr -cd '[:alnum:] -' | tr ' ' '_' | sed 's/^[_-]*//;s/[_-]*$//')
     
     # Fallback to default if empty
@@ -104,13 +104,14 @@ sanitize_filename() {
     
     # Truncate to 100 chars and trim edges again
     result=${result:0:100}
-    result=$(echo "$result" | sed 's/^[_-]*//;s/[_-]*$//')
+    while [[ "$result" =~ ^[_-] ]]; do result=${result:1}; done
+    while [[ "$result" =~ [_-]$ ]]; do result=${result%?}; done
     
     echo "$result"
 }
 
 # Determine if URL is a playlist and set appropriate filename
-if [[ $FULL_URL == *"list="* ]]; then
+if [[ "$FULL_URL" == *"list="* ]]; then
     # Extract playlist title and channel name from JSON
     PLAYLIST_TITLE=$(echo "$RAW_JSON" | jq -r '.title // "Playlist"')
     CHANNEL_NAME=$(echo "$RAW_JSON" | jq -r '.channel // .uploader // "Unknown"')
