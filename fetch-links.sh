@@ -90,23 +90,34 @@ OLDEST_URL=$(echo "$RAW_JSON" | jq -r '.entries[-1].url // .entries[-1].id')
 TOTAL_TIME=$(printf '%dh:%dm:%ds\n' $((TOTAL_SEC/3600)) $((TOTAL_SEC%3600/60)) $((TOTAL_SEC%60)))
 AVG_VIEWS=$((VIDEO_COUNT > 0 ? TOTAL_VIEWS / VIDEO_COUNT : 0))
 
+# Function to sanitize filename components
+sanitize_filename() {
+    local input="$1"
+    local default="$2"
+    local result
+    
+    # Remove special characters, replace spaces with underscores, trim edges
+    result=$(echo "$input" | tr -cd '[:alnum:] -' | tr ' ' '_' | sed 's/^[_-]*//;s/[_-]*$//')
+    
+    # Fallback to default if empty
+    result=${result:-"$default"}
+    
+    # Truncate to 100 chars and trim edges again
+    result=${result:0:100}
+    result=$(echo "$result" | sed 's/^[_-]*//;s/[_-]*$//')
+    
+    echo "$result"
+}
+
 # Determine if URL is a playlist and set appropriate filename
 if [[ $FULL_URL == *"list="* ]]; then
     # Extract playlist title and channel name from JSON
     PLAYLIST_TITLE=$(echo "$RAW_JSON" | jq -r '.title // "Playlist"')
     CHANNEL_NAME=$(echo "$RAW_JSON" | jq -r '.channel // .uploader // "Unknown"')
     
-    # Sanitize names for filename (replace special characters)
-    PLAYLIST_TITLE=$(echo "$PLAYLIST_TITLE" | tr -cd '[:alnum:] -' | tr ' ' '_' | sed 's/^[_-]*//;s/[_-]*$//')
-    CHANNEL_NAME=$(echo "$CHANNEL_NAME" | tr -cd '[:alnum:] -' | tr ' ' '_' | sed 's/^[_-]*//;s/[_-]*$//')
-    
-    # Fallback to defaults if sanitization results in empty strings
-    PLAYLIST_TITLE=${PLAYLIST_TITLE:-"Playlist"}
-    CHANNEL_NAME=${CHANNEL_NAME:-"Unknown"}
-    
-    # Truncate to prevent filesystem path length issues (max 100 chars each)
-    PLAYLIST_TITLE=${PLAYLIST_TITLE:0:100}
-    CHANNEL_NAME=${CHANNEL_NAME:0:100}
+    # Sanitize names for filename
+    PLAYLIST_TITLE=$(sanitize_filename "$PLAYLIST_TITLE" "Playlist")
+    CHANNEL_NAME=$(sanitize_filename "$CHANNEL_NAME" "Unknown")
     
     FILE_PATH="${FOLDER_NAME}/${PLAYLIST_TITLE}_by_${CHANNEL_NAME}.txt"
 else
