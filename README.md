@@ -10,4 +10,4 @@ A professional, high-speed YouTube channel analyzer and URL scraper for the term
 ## 📦 One-Click Installation
 Run this command in your terminal:
 ```bash
-curl -sSL [https://raw.githubusercontent.com/mansab/yt-fetch-cli/main/install.sh](https://raw.githubusercontent.com/mansab/yt-fetch-cli/main/install.sh) | bash
+curl -sSL [https://raw.githubusercontent.com/mansabhashim/yt-fetch-cli/main/install.sh](https://raw.githubusercontent.com/mansab/yt-fetch-cli/main/install.sh) | bash
